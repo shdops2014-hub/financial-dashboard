@@ -77,7 +77,7 @@ export default function DashboardPage() {
             <p className="text-xs text-gray-400">Sarah's Home Design, LLC</p>
           </div>
         </div>
-        <ConnectButton connected={connected} onDisconnect={() => { setConnected(false); setAllMonthly([]) }} />
+        <ConnectButton connected={connected} onConnect={() => { setConnected(true); loadData() }} onDisconnect={() => { setConnected(false); setAllMonthly([]) }} />
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
@@ -88,7 +88,7 @@ export default function DashboardPage() {
             <p className="text-gray-500 max-w-sm text-sm">
               Link your QuickBooks account to pull live P&amp;L data and visualize revenue, COGS, expenses, and net income trends from 2023 to today.
             </p>
-            <ConnectButton connected={false} onDisconnect={() => {}} />
+            <ConnectButton connected={false} onConnect={() => { setConnected(true); loadData() }} onDisconnect={() => {}} />
           </div>
         ) : (
           <>

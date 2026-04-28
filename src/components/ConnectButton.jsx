@@ -1,14 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getAuthUrl, disconnect } from '../api/quickbooksApi'
 
-export default function ConnectButton({ connected, onDisconnect }) {
+export default function ConnectButton({ connected, onConnect, onDisconnect }) {
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data === 'qb-connected') onConnect()
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [onConnect])
 
   const handleConnect = async () => {
     setLoading(true)
     try {
       const { url } = await getAuthUrl()
-      window.location.href = url
+      const popup = window.open(url, 'qb-auth', 'width=600,height=700,left=200,top=100')
+      const timer = setInterval(() => {
+        if (popup?.closed) { clearInterval(timer); setLoading(false) }
+      }, 500)
     } catch {
       setLoading(false)
     }

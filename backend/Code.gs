@@ -36,6 +36,7 @@ function doGet(e) {
 
   if (action === 'getAuthUrl') return addCors(json({ url: buildAuthUrl() }))
   if (action === 'getAuthStatus') return addCors(json({ connected: isConnected() }))
+  if (action === 'exchangeCode') return addCors(handleExchangeCode(e))
   if (action === 'getPnL') return addCors(getPnL(e))
   if (action === 'disconnect') return addCors(handleDisconnect())
 
@@ -47,7 +48,7 @@ function doGet(e) {
 function buildAuthUrl() {
   const props = getProps()
   const clientId = props.getProperty('QUICKBOOKS_CLIENT_ID')
-  const redirectUri = ScriptApp.getService().getUrl()
+  const redirectUri = props.getProperty('REDIRECT_URI') || ScriptApp.getService().getUrl()
   const state = Utilities.getUuid()
   props.setProperty('OAUTH_STATE', state)
 
@@ -92,7 +93,7 @@ function exchangeCodeForTokens(code, realmId) {
   const props = getProps()
   const clientId = props.getProperty('QUICKBOOKS_CLIENT_ID')
   const clientSecret = props.getProperty('QUICKBOOKS_CLIENT_SECRET')
-  const redirectUri = ScriptApp.getService().getUrl()
+  const redirectUri = props.getProperty('REDIRECT_URI') || ScriptApp.getService().getUrl()
 
   const credentials = Utilities.base64Encode(clientId + ':' + clientSecret)
   const res = UrlFetchApp.fetch(QB_TOKEN_URL, {
@@ -155,6 +156,18 @@ function getAccessToken() {
 function isConnected() {
   const props = getProps()
   return !!(props.getProperty('QB_ACCESS_TOKEN') && props.getProperty('QB_REALM_ID'))
+}
+
+function handleExchangeCode(e) {
+  const code = e.parameter.code
+  const realmId = e.parameter.realmId
+  if (!code || !realmId) return json({ error: 'Missing code or realmId' })
+  try {
+    exchangeCodeForTokens(code, realmId)
+    return json({ ok: true })
+  } catch (err) {
+    return json({ error: err.message })
+  }
 }
 
 function handleDisconnect() {
